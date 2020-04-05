@@ -1,0 +1,142 @@
+##############################################
+DataTables
+##############################################
+**********************************************
+fetch out unique values from two datatables : 
+(DtOfMandatoryFields.AsEnumerable().Except(DtInputData.Select.CopyToDataTable().DefaultView.ToTable(True, "Column0").AsEnumerable(), DataRowComparer.Default)).ToArray
+**********************************************
+assigning values at particulat row index :
+DtInputData.Rows(DtInputData.Rows.IndexOf( (DtInputData.Select("[Column0] = 'cellValue' ")(0)))).Item("Column1") = "The value you want to assign"
+**********************************************
+Adding column to a datatable
+dataTable.Columns.Add("Remarks").table
+**********************************************
+Comparing values from a datatable by removing special characters from both datatable values and the given value : 
+(from p in dtSample.Select() where (System.Text.RegularExpressions.Regex.Replace(p.Item("Column1").ToString, “[^a-zA-Z0-9]”, “”).Replace("O","").Replace("0","")) = (System.Text.RegularExpressions.Regex.Replace("mmmm", “[^a-zA-Z0-9]”, “”).Replace("O","").Replace("0","")) select p  ).ToArray
+**********************************************
+Remove empty rows : 
+io_CombinedInvoiceDetails.Rows.Cast(Of DataRow)().Where(Function(row) Not row.ItemArray.All(Function(field) field Is DBNull.Value Or field.Equals(""))).CopyToDataTable() 
+**********************************************
+Applying a for loop on datatable using inline syntax to select certain rows from a datatable :
+(From p In DtPrSheetData.Select() Where (not p.Item("ColumnName").ToString.ToUpper.Contains("Value".ToUpper) and p.Item("ColumnName").ToString <> "") Select p).ToArray
+**********************************************
+Filtering empty cell rows from a certain column
+DtTemp.Select("Convert([LC], System.String) is Null").ToArray
+The above syntax we use if we are reading the data using excel application scope else we can directly use =''
+**********************************************
+When ever we are reading the excel data which contains date values using excel application scope then we can parse the date
+using simple date.parse method
+If we are reading the data using workbook method then we need to use globalization method based on the date format
+**********************************************
+Filtering rows which are not empty based on certain column
+DtTemp.Select("Convert([LC], System.String) <> ''").ToArray
+**********************************************
+Converting a single column from datatable into Array : 
+(from Row in dtDatatable.Rows.Cast(Of DataRow) Select Row(0) ).ToArray()
+**********************************************
+Converting a single Column from a datatable into List
+(From row In dtPivot3.AsEnumerable() Select convert.ToString(row("ColumnName"))).ToList() this is for to list
+**********************************************
+Remove duplicate row based on column and retain all the columns
+((From LineNo In dtDummyData.DefaultView.ToTable(True,"Material Code").Select().ToList() Select (From row In dtDummyData.Select Where row("Material Code").ToString=LineNo("Material Code").ToString Select row).ToList(0)).ToList()).CopyToDatatable()
+**********************************************
+Remove duplicate row based on multiple column and retain all the columns
+((From LineNo In Dt.DefaultView.ToTable(True,"Column17","Column47").Select().ToList() Select (From row In Dt.Select Where row("Column17").ToString=LineNo("Column17").ToString and  row("Column47").ToString=LineNo("Column47").ToString Select row).ToList(0)).ToList()).CopyToDatatable() 
+**********************************************
+The following needs to be implemneted in side for each row where we wil be updating the GSEZ CBM cell value with the sum
+Adding all the values of column(GSEZ CBM) based on another column(Material Code) where the material code is repeated across multiple lines:
+DTFilterData.AsEnumerable.Where(Function(x) x(“Material Code”).ToString.Trim.Equals(row("Material Code").ToString)).Sum(Function(x) Convert.ToDouble(x(“GSEZ CBM”).ToString.Trim) ).ToString
+
+BASED ON MULTIPLE CONDITION
+DT.AsEnumerable.Where(Function(x) x(“Column17”).ToString.Trim.Equals(row("Column17").ToString) and x(“Column47”).ToString.Trim.Equals(row("Column47").ToString) ).Sum(Function(x) Convert.ToDouble(x(“Column25”).ToString.Trim) ).ToString 
+
+The following code needs to be placed below the for each loop once we calculated the sum of all the rows
+AFTER ADDING ALL THE ROW VALUES FETCHING THE TOP ROW WHICH CONTAINS SUM OF ALL THE ROWS
+((From LineNo In CBMDT.DefaultView.ToTable(True,"Column17","Column47").Select().ToList() Select (From row In CBMDT.Select Where row("Column17").ToString=LineNo("Column17").ToString and  row("Column47").ToString=LineNo("Column47").ToString Select row).ToList(0)).ToList()).CopyToDatatable() 
+**********************************************
+how to update datatable with multiple values using linq - - - - this needs to be added in invoke as it wont return any output
+in_LineItemTableForHeaderItem.Select("[Description] Is Null").ToList().ForEach(Sub(row as DataRow) row("Description")="NULL")
+**********************************************
+comparing two datatables values by concatinating two columns in one datatable :
+(From p In ExtractDataTable.Select Where ((From Row In dt.Rows.Cast(Of DataRow) Select Row("Log No 1").ToString+"/"+Row("Log No 2").ToString ).ToArray()).contains(p.Item("Log No 1").ToString+"/"+p.Item("Log No 2").ToString )).ToArray()
+**********************************************
+Checking values matching row vales based on a single column in different tables concatinated with checking all the resultant values are same or not in a particular column
+Matching line items from one datatable to another table on single column :
+(ExtractDataTable.AsEnumerable().Where(Function(row) io_CombinedInvoiceDetails.AsEnumerable().Select(Function(r) r.Field(Of String)("ContractLineItem")).Any(Function(x) x = row.Field(Of String)("Item"))).CopyToDataTable().DefaultView.ToTable(true,"Unit Price*").Rows.Count>1) 
+
+To calculate the sum of a specified  column after applying above query :
+ExtractDataTable.AsEnumerable().Where(Function(row) io_CombinedInvoiceDetails.AsEnumerable().Select(Function(r) r.Field(Of String)("ContractLineItem")).Any(Function(x) x = row.Field(Of String)("Item"))).CopyToDataTable().AsEnumerable().Sum(Function(row) Double.Parse(row.Field(Of String)("Target Qty*"))).ToString
+
+We will use the following code when the field is already in double datatype
+DtSample.AsEnumerable().Sum(Function(row) row.Field(Of Double)("Amount")).tostring
+**********************************************
+https://forum.uipath.com/t/datatable-filtering-with-expressions/21692
+**********************************************
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##############################################
+Date Operations :
+##############################################
+**********************************************
+Check given date is neither sunday nor past date
+(Date.Parse("Date in date format").DayOfWeek.ToString = "Sunday") or ((Date.Parse("Date in string format")< (Date.Now.ToUniversalTime.AddHours(05).AddMinutes(30).Date) ))
+**********************************************
+Covnertion of string(Custom Frmat) to date :
+Datetime.ParseExact(“12/05/2019”,“dd/MM/yyyy”,System.Globalization.CultureInfo.InvariantCulture) 
+**********************************************
+Convert date from one format to another by first finding the existing date format using regex : 
+If(New Regex("(^[a-zA-Z]*[day] [a-zA-Z]*.\d{2}.\d{4})").IsMatch("Tuesday January.15.2019 11:00 AM"),"Tuesday January.15.2019 11:00 AM".Replace((New Regex("(^[a-zA-Z]*[day] [a-zA-Z]*.\d{2}.\d{4})").Matches("Tuesday January.15.2019 11:00 AM")(0).ToString),DateTime.ParseExact(New Regex("(^[a-zA-Z]*[day] [a-zA-Z]*.\d{2}.\d{4})").Matches("Tuesday January.15.2019 11:00 AM")(0).ToString, "dddd MMMM.dd.yyyy", System.Globalization.CultureInfo.InvariantCulture).ToString("dddd, MMMM dd, yyyy") ),"not matched")
+**********************************************
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##############################################
+Secure String Operations :
+##############################################
+**********************************************
+String to Secure String : 
+New System.Net.NetworkCredential(string.Empty,"Password11").SecurePassword
+**********************************************
+Secure String to Normal String : 
+new system.Net.NetworkCredential(String.Empty, Password).password
+**********************************************
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##############################################
+Database Connections :
+##############################################
+**********************************************
+Connection string for local postgres:-
+"Dsn=PostgreSQL35W;pwd=<Password>;uid=<UID>"
+**********************************************
+connection string for cloud postgres :-
+1) Driver=PostgreSQL Unicode;Server=<ServerName>;Port=<portNo>;Database=<DatabaseName>;Uid=<UID>;Pwd=<Password>;
+2) Driver={PostgreSQL UNICODE};Server=<ServerName>;Port=<PosrtNo>;Database=<DatabaseName>;Uid=<UID>;Pwd=<Password>;
+**********************************************
+Connection string for Oracle client :
+"Provider=OraOLEDB.Oracle.1;Data Source=<DBName>;Password=<Password>;User ID=<UID>"
+provider name:
+"System.Data.OleDb" 
+**********************************************
+connection string for mysql : 
+Data Source=<DatasourceName>;Initial Catalog=<DB>;Persist Security Info=True;User ID=<UID>;Password=<Password>
+**********************************************
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##############################################
+Exceptions :
+##############################################
+**********************************************
+If we want to add additional fields to the exception object :
+exception.Data("ExceptionMailSent") = True
+Here ExceptionMailSent gonna be the new field where we will assign a value
+**********************************************
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##############################################
+Excel Formulas :
+##############################################
+**********************************************
+Getting particular cell value matching the beside cell value from a different sheet :
+=IF(ISNA(INDEX(POReleaseExtract!$B$2:$B$1048576,MATCH(A3,POReleaseExtract!$G$2:$G$1048576,0))),"",INDEX(POReleaseExtract!$B$2:$B$1048576,MATCH(A3,POReleaseExtract!$G$2:$G$1048576,0)))
+**********************************************
+Updating cell value based on certain condition from other sheet value:
+=IF(ISNA(INDEX(POReleaseExtract!$X$2:$X$1048576,MATCH(A3,POReleaseExtract!$G$2:$G$1048576,0))),"",IF(INDEX(POReleaseExtract!$X$2:$X$1048576,MATCH(A3,POReleaseExtract!$G$2:$G$1048576,0))="XX","Completed","Pending"))
+**********************************************
+Fetchign cell value and checking for na : 
+=IF(ISNA(INDEX(SalesOrderData!$X$2:$X$1048576,MATCH(A2,SalesOrderData!$A$2:$A$1048576,0))),"",INDEX(SalesOrderData!$X$2:$X$1048576,MATCH(A2,SalesOrderData!$A$2:$A$1048576,0)))
+**********************************************
